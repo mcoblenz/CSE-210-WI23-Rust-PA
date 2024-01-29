@@ -9,28 +9,37 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub struct Crab {
     // TODO: Add fields here (some in part 1, some in part 2)
+    pub name: String, 
+    pub speed: u32,
+    pub color: Color,
+    pub diet: Diet,
+    pub reefs: Vec<Rc<RefCell<Reef>>>,
 }
 
 // Do NOT implement Copy for Crab.
 impl Crab {
     pub fn new(name: String, speed: u32, color: Color, diet: Diet) -> Crab {
-        unimplemented!();
+        Crab{name, speed, color, diet, reefs:Vec::new(), }
     }
 
     pub fn name(&self) -> &str {
-        unimplemented!();
+        &self.name
     }
 
     pub fn speed(&self) -> u32 {
-        unimplemented!();
+        self.speed
     }
 
     pub fn color(&self) -> &Color {
-        unimplemented!();
+        &self.color
     }
 
     pub fn diet(&self) -> Diet {
-        unimplemented!();
+        self.diet
+    }
+
+    pub fn breed(name: &str, color: Color, diet: Diet) -> Crab {
+        Crab::new(name.to_string(), 1, color, diet)
     }
 
     // PART 2 BELOW
@@ -40,7 +49,7 @@ impl Crab {
      * Have this crab discover a new reef, adding it to its list of reefs.
      */
     pub fn discover_reef(&mut self, reef: Rc<RefCell<Reef>>) {
-        unimplemented!();
+        self.reefs.push(reef);
     }
 
     /**
@@ -53,14 +62,26 @@ impl Crab {
      * If all reefs are empty, or this crab has no reefs, return None.
      */
     fn catch_prey(&mut self) -> Option<(Box<dyn Prey>, usize)> {
-        unimplemented!();
+        if(self.reefs.is_empty()) {
+            return None;
+        } else {
+            for(index, reef) in self.reefs.iter().enumerate() {
+                let current_prey = reef.borrow_mut().take_prey();
+                if(current_prey.is_none()) {
+                    continue;
+                } else {
+                    return Some((current_prey?, index));
+                }
+            }
+        }
+        return None;
     }
 
     /**
      * Releases the given prey back into the reef at the given index.
      */
     fn release_prey(&mut self, prey: Box<dyn Prey>, reef_index: usize) {
-        unimplemented!();
+        self.reefs[reef_index].borrow_mut().add_prey(prey);
     }
 
     /**
@@ -100,7 +121,28 @@ impl Crab {
      * Note: this pseudocode reads like a terrible poem.
      */
     pub fn hunt(&mut self) -> bool {
-        unimplemented!();
+        let mut hunt = false;
+        let mut caught: Vec<Option<(Box<dyn Prey>, usize)>> = Vec::new();  
+        while(true) {
+            if let Some((mut current_prey, mut index)) = self.catch_prey() {
+                if(!current_prey.try_escape(&self)) {
+                    if(current_prey.diet() == self.diet) {
+                        hunt = true;
+                        break;
+                    }
+                }
+                caught.push(Some((current_prey, index)));
+            } else {
+                break;
+            }
+        }
+        while(!caught.is_empty()) {
+            let Some((mut cur_p, mut idx)) = caught.pop().unwrap() else {
+                break;
+            };
+            self.release_prey(cur_p, idx);
+        }
+        return hunt;
     }
 
     /**
@@ -111,7 +153,12 @@ impl Crab {
      * up to you to figure out which ones and where. Do not make any other changes
      * to the signature.
      */
-    pub fn choose_recipe(&self, cookbook: &Cookbook) -> Option<&Recipe> {
-        unimplemented!();
+    pub fn choose_recipe<'a>(&'a self, cookbook: &'a Cookbook) -> Option<&Recipe> {
+        for(index, recipe) in cookbook.recipes().enumerate() {
+            if(self.diet == recipe.diet()) {
+                return Some(recipe);
+            }
+        }
+        None
     }
 }

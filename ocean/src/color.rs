@@ -34,6 +34,13 @@ impl Color {
      * https://doc.rust-lang.org/std/primitive.u8.html
      */
     pub fn cross(c1: &Color, c2: &Color) -> Color {
-        unimplemented!();
+        // unimplemented!();
+        //let red = (c1.r + c2.r).rem_euclid(u8::MAX);
+        //let green = (c1.g + c2.g).rem_euclid(u8::MAX);
+        //let blue = (c1.b + c2.b).rem_euclid(u8::MAX);
+        let red = c1.r.overflowing_add(c2.r).0;
+        let green = c1.g.overflowing_add(c2.g).0;
+        let blue = c1.b.overflowing_add(c2.b).0;
+        Color::new(red,green,blue)
     }
 }
